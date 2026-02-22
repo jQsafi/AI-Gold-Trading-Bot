@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Gold Trading Bot - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #05070a;
+            --glass-bg: rgba(16, 20, 30, 0.7);
+            --accent-glow: rgba(0, 163, 255, 0.2);
+            --primary: #00a3ff;
+            --success: #00ff88;
+            --danger: #ff3e3e;
+            --text-main: #e0e6ed;
+            --text-muted: #8892b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 10% 10%, var(--accent-glow) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(255, 0, 150, 0.05) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .chart-container {
+            grid-column: span 3;
+            min-height: 400px;
+        }
+
+        .signal-container {
+            grid-column: span 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .possibility-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .possibility-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.5s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .history-card {
+            grid-column: span 2;
+        }
+
+        .open-positions-card {
+            grid-column: span 2;
+        }
+
+        .bullish {
+            color: var(--success);
+        }
+
+        .bearish {
+            color: var(--danger);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+        <header style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
+            <h1 style="font-weight: 700; letter-spacing: -1px;">ANTIGRAVITY <span
+                    style="color: var(--primary);">HUB</span></h1>
+            <div id="lastUpdate" style="color: var(--text-muted); font-size: 0.9rem;">Syncing...</div>
+        </header>
+
+        <div class="grid">
+            <div class="card chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+
+            <div class="card signal-container">
+                <div style="font-size: 0.9rem; color: var(--text-muted);">SIGNAL CONFIDENCE</div>
+                <div id="signalVal" style="font-size: 3rem; font-weight: 700;">HOLD</div>
+                <div id="probVal" style="font-size: 1.5rem;">0%</div>
+                <div class="possibility-bar">
+                    <div id="probFill" class="possibility-fill" style="width: 0%"></div>
+                </div>
+                <div id="logicText" style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">WAITING FOR
+                    CONFLUENCE</div>
+            </div>
+
+            <div class="card open-positions-card">
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">OPEN POSITIONS</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TICKET</th>
+                            <th>TYPE</th>
+                            <th>PROFIT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="openTable"></tbody>
+                </table>
+            </div>
+
+            <div class="card history-card">
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">CLOSED TRADES</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TICKET</th>
+                            <th>TYPE</th>
+                            <th>PROFIT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let chart;
+
+        function initChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Gold Price', data: [], borderColor: '#00a3ff', tension: 0.2, fill: false, pointRadius: 0 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8892b0' } }
+                    }
+                }
+            });
+        }
+
+        function updateUI() {
+            fetch('/api/state')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) return;
+                    document.getElementById('lastUpdate').textContent = 'Last Sync: ' + data.timestamp;
+                    document.getElementById('signalVal').textContent = data.signal;
+                    document.getElementById('probVal').textContent = data.signal_prob + '%';
+                    document.getElementById('probFill').style.width = data.signal_prob + '%';
+
+                    // Chart
+                    if (data.chart) {
+                        chart.data.labels = data.chart.map(c => new Date(c.time * 1000).toLocaleTimeString());
+                        chart.data.datasets[0].data = data.chart.map(c => (c.open + c.close) / 2);
+                        chart.update('none');
+                    }
+
+                    // Open Trades
+                    const ot = document.getElementById('openTable');
+                    ot.innerHTML = data.positions.map(p => `<tr><td>#${p.ticket}</td><td class="${p.type === 'BUY' ? 'bullish' : 'bearish'}" style="font-weight: 700;">${p.type}</td><td class="${p.profit >= 0 ? 'bullish' : 'bearish'}">$${p.profit.toFixed(2)}</td></tr>`).join('');
+
+                    // Closed Trades
+                    const ht = document.getElementById('historyTable');
+                    ht.innerHTML = data.history.map(h => `<tr><td>#${h.ticket}</td><td style="font-weight: 700;">${h.type}</td><td class="${h.profit >= 0 ? 'bullish' : 'bearish'}">$${h.profit.toFixed(2)}</td></tr>`).join('');
+                });
+        }
+
+        initChart();
+        setInterval(updateUI, 200); // Ultra-live refresh (200ms)
+        updateUI();
+    </script>
+</body>
+
+</html>

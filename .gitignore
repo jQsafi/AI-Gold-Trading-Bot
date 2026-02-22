@@ -4,3 +4,8 @@ __pycache__/
 chrome_profile/
 *.pyc
 .DS_Store
+bot_logs.txt
+news_data.txt
+dashboard_state.json
+trading_history.db
+.vscode/
