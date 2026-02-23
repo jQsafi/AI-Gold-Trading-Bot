@@ -114,8 +114,18 @@ async def main():
                 "history": history,
                 "chart": chart_data
             }
-            with open("dashboard_state.json", "w") as f:
+            import os
+            # Atomic write to prevent JSONDecodeError race condition in dashboard
+            tmp_file = "dashboard_state_tmp.json"
+            target_file = "dashboard_state.json"
+            with open(tmp_file, "w") as f:
                 json.dump(state, f)
+            
+            try:
+                os.replace(tmp_file, target_file)
+            except PermissionError:
+                # Flask server might hold a read-lock for a few milliseconds
+                pass
 
             # High Frequency Wait (100ms)
             await asyncio.sleep(0.1)

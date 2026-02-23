@@ -13,9 +13,12 @@ def index():
 @app.route('/api/state')
 def get_state():
     if os.path.exists("dashboard_state.json"):
-        with open("dashboard_state.json", "r") as f:
-            data = json.load(f)
-            return jsonify(data)
+        try:
+            with open("dashboard_state.json", "r") as f:
+                data = json.load(f)
+                return jsonify(data)
+        except json.JSONDecodeError:
+            return jsonify({"error": "State file updating"})
     return jsonify({"error": "State file not found"})
 
 if __name__ == '__main__':
