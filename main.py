@@ -23,9 +23,12 @@ async def main():
     try:
         print("\n" + "="*50)
         print("BOT LIVE: TECHNICAL ANALYSIS MODE (100ms REALTIME)")
+        print(f"Trading Symbol: {trader.symbol}")
+        print(f"Risk Percent: {trader.risk_percent*100}%")
         print("="*50 + "\n")
         
         last_print_time = datetime.datetime.now()
+        print("Entering main loop...")
         
         while True:
             now = datetime.datetime.now()
@@ -87,7 +90,17 @@ async def main():
                 "h1_trend": snapshot['h1']['trend'],
                 "m15_trend": snapshot['m15']['trend'],
                 "rsi": snapshot['m15']['rsi'],
+                "h1_rsi": snapshot['h1']['rsi'],
+                "d1_sma": snapshot['d1']['sma'],
+                "h1_sma": snapshot['h1']['sma'],
+                "m15_sma": snapshot['m15']['sma'],
+                "atr": snapshot['h1']['atr'],
                 "balance": snapshot['balance'],
+                "equity": snapshot['equity'],
+                "margin_free": snapshot['margin_free'],
+                "margin_level": snapshot['margin_level'],
+                "login": snapshot['login'],
+                "name": snapshot['name'],
                 "news_paused": await trader.is_news_paused(),
                 "positions": [
                     {
@@ -98,11 +111,7 @@ async def main():
                         "price_open": p.price_open
                     } for p in open_positions
                 ],
-                "history": [
-                    {
-                        "ticket": h[0], "type": h[2], "profit": h[6], "close_time": h[8]
-                    } for h in history
-                ],
+                "history": history,
                 "chart": chart_data
             }
             with open("dashboard_state.json", "w") as f:

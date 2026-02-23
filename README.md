@@ -41,5 +41,21 @@ This repository contains a professional AI trading bot designed for the Gold (XA
 - `requirements.txt`: Python package dependencies.
 - `Gemini.md`: Specific instructions for AI integration.
 
+## ✨ Features
+- **Ultra-Live Processing:** 200ms tick cycle for near-zero latency execution.
+- **Dynamic Risk Management:** Auto-calculates lot size based on equity and enforces a strict daily loss limit.
+- **Multi-Timeframe Confluence:** Evaluates D1, H1, and M15 trends along with RSI and SMA indicators.
+- **Smart Position Management:** Implements auto-breakeven locking and scales out partial profits.
+- **Responsive Signal Flipping:** Detects local trend shifts and collapses losing positions to reverse direction.
+- **News Filter Engine:** Pauses trading automatically around high-impact economic events.
+- **Interactive UI Dashboard:** A sleek, live-updating local web dashboard featuring real-time account overviews.
+
+## 🗺️ Future Plans
+- **Advanced AI Integration:** Full `gemini-cli` integration to weigh fundamental & technical inputs simultaneously.
+- **Multi-Pair Support:** Expand beyond XAUUSD to natively track major Forex pairs and indices.
+- **Dollar Cost Averaging (DCA):** Implement intelligent grid scaling mechanics to systematically recover drawdowns.
+- **Advanced Analytics:** Add performance graphs, win-rate metrics, and automated trade reporting to the dashboard.
+- **Two-Way Telegram Control:** Enable the bot to accept manual overrides and parameter shifts directly via Telegram.
+
 ## ⚠️ Disclaimer
 Trading involves significant risk. This bot is for educational purposes. Always test on a Demo account before considering live markets.

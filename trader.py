@@ -12,9 +12,10 @@ class GoldTrader:
         self.password = os.getenv("MT5_PASSWORD")
         self.server = os.getenv("MT5_SERVER")
         self.symbol = os.getenv("SYMBOL", "XAUUSDm")
+        self.point = 0.01 # Default, will be updated in initialize()
         self.risk_percent = float(os.getenv("RISK_PERCENT", "1.0")) / 100.0
         # Exness explicit terminal path for reliability
-        self.terminal_path = r"C:\Program Files\MetaTrader 5 EXNESS\terminal64.exe"
+        self.terminal_path = os.getenv("MT5_TERMINAL_PATH", r"C:\Program Files\MetaTrader 5 EXNESS\terminal64.exe")
         
         # Advanced Settings
         self.max_spread = float(os.getenv("MAX_SPREAD", "40"))
@@ -59,12 +60,27 @@ class GoldTrader:
         conn.close()
 
     async def get_history(self):
-        conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        c.execute("SELECT * FROM trades ORDER BY time_close DESC LIMIT 50")
-        rows = c.fetchall()
-        conn.close()
-        return rows
+        import datetime
+        from_date = datetime.datetime.now() - datetime.timedelta(days=7)
+        to_date = datetime.datetime.now() + datetime.timedelta(days=1)
+        
+        deals = mt5.history_deals_get(from_date, to_date, group=f"*{self.symbol}*")
+        if deals is None:
+            return []
+            
+        closed = []
+        for d in deals:
+            # DEAL_ENTRY_OUT means this deal closed a position
+            if d.magic == self.magic_number and d.entry == mt5.DEAL_ENTRY_OUT:
+                closed.append({
+                    "ticket": d.order, 
+                    "type": "BUY" if d.type == mt5.DEAL_TYPE_SELL else "SELL",
+                    "profit": d.profit,
+                    "close_time": d.time
+                })
+        
+        closed.sort(key=lambda x: x["close_time"], reverse=True)
+        return closed[:50]
 
     async def get_chart_data(self, timeframe=mt5.TIMEFRAME_M15, count=100):
         rates = mt5.copy_rates_from_pos(self.symbol, timeframe, 0, count)
@@ -81,13 +97,27 @@ class GoldTrader:
             return False
 
         print(f"Connected to MT5 account {self.login}")
+        
+        # Fetch symbol point value
+        symbol_info = mt5.symbol_info(self.symbol)
+        if symbol_info:
+            self.point = symbol_info.point
+            print(f"Symbol {self.symbol} point value: {self.point}")
+        
         return True
 
-    async def get_market_snapshot(self, symbol="XAUUSDm"):
+    async def get_market_snapshot(self, symbol=None):
         """Fetches the latest tick, account info, and multi-timeframe indicators."""
+        if symbol is None:
+            symbol = self.symbol
+            
         tick = mt5.symbol_info_tick(symbol)
         if tick is None:
             return None
+        
+        # Get dynamic point value for this symbol
+        symbol_info = mt5.symbol_info(symbol)
+        point = symbol_info.point if symbol_info else 0.01
         
         # Helper to calculate indicators
         def calc_indicators(timeframe, count=100):
@@ -135,6 +165,8 @@ class GoldTrader:
         margin = account_info.margin if account_info else 0
         margin_free = account_info.margin_free if account_info else 0
         margin_level = account_info.margin_level if account_info else 0
+        login_id = account_info.login if account_info else None
+        account_name = account_info.name if account_info else None
         
         return {
             "bid": tick.bid,
@@ -144,6 +176,8 @@ class GoldTrader:
             "margin": margin,
             "margin_free": margin_free,
             "margin_level": margin_level,
+            "login": login_id,
+            "name": account_name,
             "m15": m15,
             "h1": h1,
             "d1": d1
@@ -334,7 +368,7 @@ class GoldTrader:
             new_sl = 0
             
             # Point conversion for Gold
-            pts = 0.01 
+            pts = self.point
 
             if pos.type == mt5.POSITION_TYPE_BUY:
                 profit_pts = tick.bid - pos.price_open
@@ -426,7 +460,7 @@ class GoldTrader:
             return
 
         tick = mt5.symbol_info_tick(self.symbol)
-        spread_points = (tick.ask - tick.bid) / 0.01 # Gold conversion
+        spread_points = (tick.ask - tick.bid) / self.point 
         
         if spread_points > self.max_spread:
             print(f">>> TRADE BLOCKED: Spread too high ({spread_points:.1f} > {self.max_spread})")

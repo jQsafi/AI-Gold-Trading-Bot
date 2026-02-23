@@ -118,20 +118,124 @@
         .bearish {
             color: var(--danger);
         }
+
+        .table-scroll {
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: #0b0f16;
+            z-index: 10;
+        }
     </style>
 </head>
 
 <body>
     <div class="dashboard">
         <header style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
-            <h1 style="font-weight: 700; letter-spacing: -1px;">ANTIGRAVITY <span
-                    style="color: var(--primary);">HUB</span></h1>
+            <h1 style="font-weight: 700; letter-spacing: -1px;">AI GOLD TRADING <span
+                    style="color: var(--primary);">BOT</span></h1>
             <div id="lastUpdate" style="color: var(--text-muted); font-size: 0.9rem;">Syncing...</div>
         </header>
 
         <div class="grid">
-            <div class="card chart-container">
-                <canvas id="priceChart"></canvas>
+            <div class="card account-info-container"
+                style="grid-column: span 3; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                <div
+                    style="grid-column: span 2; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: baseline;">
+                    <h3 style="font-size: 1.1rem; margin: 0;">ACCOUNT OVERVIEW</h3>
+                    <div id="accountMeta" style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400;">Loading
+                        account...</div>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: rgba(0, 163, 255, 0.05); border-radius: 10px; border: 1px solid rgba(0, 163, 255, 0.1);">
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">BALANCE</div>
+                    <div id="balanceVal" style="font-size: 2rem; font-weight: 700; color: #fff;">$0.00</div>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: rgba(0, 255, 136, 0.05); border-radius: 10px; border: 1px solid rgba(0, 255, 136, 0.1);">
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">EQUITY</div>
+                    <div id="equityVal" style="font-size: 2rem; font-weight: 700; color: #fff;">$0.00</div>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: rgba(255, 255, 255, 0.02); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">FREE MARGIN</div>
+                    <div id="marginFreeVal" style="font-size: 1.5rem; font-weight: 600; color: #e0e6ed;">$0.00</div>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: rgba(255, 255, 255, 0.02); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">MARGIN LEVEL</div>
+                    <div id="marginLevelVal" style="font-size: 1.5rem; font-weight: 600; color: #e0e6ed;">0.00%</div>
+                </div>
+            </div>
+
+            <div class="card market-info-container"
+                style="grid-column: span 3; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div
+                    style="grid-column: span 3; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: baseline;">
+                    <h3 style="font-size: 1.1rem; margin: 0;">MARKET TECHNICALS</h3>
+                    <div id="priceStatus" style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400;">Waiting
+                        for tick...</div>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: rgba(255, 255, 255, 0.02); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">PRICE ACTION</div>
+                    <div id="livePriceVal" style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-top: 5px;">
+                        0.00</div>
+                    <div id="atrVal" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">ATR (1H):
+                        0.00</div>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: rgba(255, 255, 255, 0.02); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">TREND HEATMAP</div>
+                    <div style="display: flex; gap: 10px; margin-top: 8px;">
+                        <span id="d1Badge"
+                            style="padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; background: #333;">D1</span>
+                        <span id="h1Badge"
+                            style="padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; background: #333;">H1</span>
+                        <span id="m15Badge"
+                            style="padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; background: #333;">M15</span>
+                    </div>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: rgba(255, 255, 255, 0.02); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">MOMENTUM (RSI)</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                        <div>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">1H</span>
+                            <div id="rsiH1Val" style="font-size: 1.2rem; font-weight: 600; color: #fff;">0.0</div>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">15M</span>
+                            <div id="rsiM15Val" style="font-size: 1.2rem; font-weight: 600; color: #fff;">0.0</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="card signal-container">
@@ -147,54 +251,120 @@
 
             <div class="card open-positions-card">
                 <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">OPEN POSITIONS</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>TICKET</th>
-                            <th>TYPE</th>
-                            <th>PROFIT</th>
-                        </tr>
-                    </thead>
-                    <tbody id="openTable"></tbody>
-                </table>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>TICKET</th>
+                                <th>TYPE</th>
+                                <th>PROFIT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="openTable"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="card history-card">
                 <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">CLOSED TRADES</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>TICKET</th>
-                            <th>TYPE</th>
-                            <th>PROFIT</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTable"></tbody>
-                </table>
+                <div class="table-scroll" style="max-height: 400px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>TICKET</th>
+                                <th>TYPE</th>
+                                <th>PROFIT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <h2
+                style="font-size: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; color: var(--primary);">
+                BOT INTELLIGENCE & CAPABILITIES</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <!-- Capabilities -->
+                <div class="card" style="background: rgba(0, 163, 255, 0.03);">
+                    <h3
+                        style="color: var(--primary); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="cpu" style="width: 20px; height: 20px;"></i> Capabilities
+                    </h3>
+                    <ul
+                        style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+                        <li><strong style="color: #fff;">Ultra-Live Processing:</strong> 200ms tick cycle for near-zero
+                            latency execution.</li>
+                        <li><strong style="color: #fff;">Direct MT5 Hooks:</strong> Completely local execution bypassing
+                            third-party limits.</li>
+                        <li><strong style="color: #fff;">Dynamic Scaling:</strong> Auto-calculates lot size based on
+                            equity to strictly enforce risk.</li>
+                        <li><strong style="color: #fff;">Data Agnostic:</strong> Multi-timeframe confluence measuring
+                            H1, M15, and strict D1 trends.</li>
+                    </ul>
+                </div>
+
+                <!-- Strategies -->
+                <div class="card" style="background: rgba(0, 255, 136, 0.03);">
+                    <h3
+                        style="color: var(--success); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="trending-up" style="width: 20px; height: 20px;"></i> Core Strategies
+                    </h3>
+                    <ul
+                        style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+                        <li><strong style="color: #fff;">Trend Following:</strong> Trades strictly in alignment with the
+                            Daily and Hourly trend momentum.</li>
+                        <li><strong style="color: #fff;">Trailing Protections:</strong> Auto-breakeven locking and
+                            dynamic trailing stops to secure running profits.</li>
+                        <li><strong style="color: #fff;">Partial Close:</strong> Scales out 50% of the position when
+                            reaching the first targeted safety point.</li>
+                        <li><strong style="color: #fff;">Flip-Signal Detection:</strong> Instantly collapses losing
+                            positions if the local trend shifts entirely.</li>
+                    </ul>
+                </div>
+
+                <!-- Characteristics -->
+                <div class="card" style="background: rgba(255, 0, 150, 0.03);">
+                    <h3 style="color: #ff0096; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="shield" style="width: 20px; height: 20px;"></i> Safety Characteristics
+                    </h3>
+                    <ul
+                        style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+                        <li><strong style="color: #fff;">Hard Daily Limit:</strong> Shuts down automatically if 2%
+                            floating loss is hit.</li>
+                        <li><strong style="color: #fff;">Spread Filter:</strong> Rejects trades if active market spreads
+                            are abnormally wide.</li>
+                        <li><strong style="color: #fff;">News Filter:</strong> Suspends activity 30 minutes before &
+                            after high-impact USD events.</li>
+                        <li><strong style="color: #fff;">Local-Only Data:</strong> Never leaks private MT5 credentials.
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Advantages -->
+                <div class="card" style="background: rgba(255, 204, 0, 0.03);">
+                    <h3 style="color: #ffcc00; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="zap" style="width: 20px; height: 20px;"></i> Key Advantages
+                    </h3>
+                    <ul
+                        style="list-style: none; padding: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+                        <li><strong style="color: #fff;">Emotionless Execution:</strong> Removes panic selling or
+                            revenge trading entirely.</li>
+                        <li><strong style="color: #fff;">24/5 Monitoring:</strong> Never sleeps, watching price ticks
+                            round the clock.</li>
+                        <li><strong style="color: #fff;">Reduced Overhead:</strong> Bypasses costly intermediary API
+                            hosts (like MetaAPI).</li>
+                        <li><strong style="color: #fff;">Scalable Architecture:</strong> Built using modern asynchronous
+                            Python to prevent thread blocking.</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
-
     <script>
         lucide.createIcons();
-        let chart;
-
-        function initChart() {
-            const ctx = document.getElementById('priceChart').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: [], datasets: [{ label: 'Gold Price', data: [], borderColor: '#00a3ff', tension: 0.2, fill: false, pointRadius: 0 }] },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { display: false },
-                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8892b0' } }
-                    }
-                }
-            });
-        }
 
         function updateUI() {
             fetch('/api/state')
@@ -206,12 +376,54 @@
                     document.getElementById('probVal').textContent = data.signal_prob + '%';
                     document.getElementById('probFill').style.width = data.signal_prob + '%';
 
-                    // Chart
-                    if (data.chart) {
-                        chart.data.labels = data.chart.map(c => new Date(c.time * 1000).toLocaleTimeString());
-                        chart.data.datasets[0].data = data.chart.map(c => (c.open + c.close) / 2);
-                        chart.update('none');
+                    // Account Info
+                    if (data.login && data.name) {
+                        document.getElementById('accountMeta').innerHTML = `Account: <strong>${data.login}</strong> | ${data.name}`;
                     }
+
+                    document.getElementById('balanceVal').textContent = '$' + data.balance.toFixed(2);
+
+                    if (data.equity !== undefined) {
+                        document.getElementById('equityVal').textContent = '$' + data.equity.toFixed(2);
+                    }
+                    if (data.margin_free !== undefined) {
+                        document.getElementById('marginFreeVal').textContent = '$' + data.margin_free.toFixed(2);
+                    }
+                    if (data.margin_level !== undefined) {
+                        document.getElementById('marginLevelVal').textContent = data.margin_level.toFixed(2) + '%';
+                    }
+
+                    // Technical Data binding
+                    if (data.price) {
+                        document.getElementById('priceStatus').textContent = 'Live tracking (' + data.timestamp.split(' ')[1] + ')';
+                        document.getElementById('priceStatus').style.color = 'var(--success)';
+                        document.getElementById('livePriceVal').textContent = data.price.split('/')[0]; // Using bid
+                    }
+                    if (data.atr) {
+                        document.getElementById('atrVal').textContent = `ATR (1H): ${data.atr.toFixed(3)}`;
+                    }
+
+                    if (data.h1_rsi) {
+                        document.getElementById('rsiH1Val').textContent = data.h1_rsi;
+                        document.getElementById('rsiH1Val').style.color = data.h1_rsi > 70 ? 'var(--danger)' : (data.h1_rsi < 30 ? 'var(--success)' : '#fff');
+                    }
+                    if (data.rsi) {
+                        document.getElementById('rsiM15Val').textContent = data.rsi;
+                        document.getElementById('rsiM15Val').style.color = data.rsi > 70 ? 'var(--danger)' : (data.rsi < 30 ? 'var(--success)' : '#fff');
+                    }
+
+                    const updateBadge = (id, trend) => {
+                        const el = document.getElementById(id);
+                        if (el && trend) {
+                            el.style.background = trend === 'BULLISH' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(255, 62, 62, 0.2)';
+                            el.style.color = trend === 'BULLISH' ? 'var(--success)' : 'var(--danger)';
+                            el.style.border = `1px solid ${trend === 'BULLISH' ? 'rgba(0, 255, 136, 0.5)' : 'rgba(255, 62, 62, 0.5)'}`;
+                        }
+                    };
+
+                    updateBadge('d1Badge', data.d1_trend);
+                    updateBadge('h1Badge', data.h1_trend);
+                    updateBadge('m15Badge', data.m15_trend);
 
                     // Open Trades
                     const ot = document.getElementById('openTable');
@@ -223,7 +435,6 @@
                 });
         }
 
-        initChart();
         setInterval(updateUI, 200); // Ultra-live refresh (200ms)
         updateUI();
     </script>

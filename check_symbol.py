@@ -5,17 +5,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def check():
-    if not mt5.initialize():
-        print(f"MT5 Init Failed: {mt5.last_error()}")
-        return
-
     login = int(os.getenv('MT5_LOGIN'))
     password = os.getenv('MT5_PASSWORD')
     server = os.getenv('MT5_SERVER')
+    terminal_path = os.getenv('MT5_TERMINAL_PATH')
     
-    authorized = mt5.login(login, password=password, server=server)
-    if not authorized:
-        print(f"Login Failed for {login}: {mt5.last_error()}")
+    # Initialize with path if provided
+    init_success = False
+    if terminal_path:
+        init_success = mt5.initialize(path=terminal_path, login=login, password=password, server=server)
+    else:
+        init_success = mt5.initialize()
+        if init_success:
+            authorized = mt5.login(login, password=password, server=server)
+            if not authorized:
+                init_success = False
+
+    if not init_success:
+        print(f"MT5 Init/Login Failed: {mt5.last_error()}")
         mt5.shutdown()
         return
         
