@@ -2,6 +2,8 @@
 
 This repository contains a professional AI trading bot designed for the Gold (XAUUSD) market on **Exness**. It leverages **Google Gemini** (via `gemini-cli`) for market analysis and the **Native MetaTrader 5 (MT5)** library for trade execution on Windows.
 
+![Mind Map](NotebookLM Mind Map.png)
+
 ## 🚀 Overview
 - **AI Analyst**: Uses Gemini to analyze price action, trends, and momentum.
 - **Native Execution**: Connects directly to the MT5 terminal on Windows for low-latency trading.
